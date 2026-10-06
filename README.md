@@ -164,9 +164,11 @@ Se compararon datos del ERR con registros de la estación automática de Upala (
 
 ## Conclusión
 
-Ambos productos satelitales captan eventos de lluvia y permiten observar tendencias generales cuando se comparan con estaciones en tierra. Sin embargo, sus estimaciones no son lo suficientemente precisas para aplicaciones cuantitativas como la alimentación de modelos hidrológicos (HEC-HMS) o hidráulicos.
+Ambos productos satelitales permiten captar eventos de lluvia y observar tendencias generales. Sin embargo, presentan limitaciones para su utilización como fuente de precipitación en aplicaciones cuantitativas como la alimentación de modelos hidrológicos (HEC-HMS) o hidráulicos (HEC-RAS).
 
-La experiencia con el GHE en años anteriores mostró el mismo patrón: los datos satelitales son útiles para identificar eventos y analizar tendencias, pero no reemplazan la medición en tierra para aplicaciones operativas.
+La experiencia previa con el GHE durante trabajos de modelación hidrológica mostró resultados poco satisfactorios para este tipo de aplicación. El ERR presenta una mejor capacidad para captar los eventos observados en los casos analizados, aunque mantiene una tendencia similar a la observada anteriormente con el GHE.
+
+Los productos satelitales resultan útiles como fuente complementaria de información sobre precipitación, pero las mediciones en tierra continúan siendo fundamentales para aplicaciones de modelación hidrológica e hidráulica.
 
 ## Contexto
 
