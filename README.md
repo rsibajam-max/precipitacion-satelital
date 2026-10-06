@@ -156,7 +156,7 @@ Se compararon datos del ERR con registros de la estación automática de Upala (
 
 **Observaciones:**
 
-- El ERR captó el evento principal de lluvia (16:00–18:00), con una sobreestimación moderada.
+- El ERR captó el evento principal de lluvia (16:00–18:00), con una sobreestimación.
 - El ERR también detectó lloviznas leves que el IMN registró con valores bajos.
 - Los acumulados horarios del ERR son del mismo orden de magnitud que los del IMN.
 
