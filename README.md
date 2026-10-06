@@ -1,65 +1,30 @@
-# hidroestimador
+# precipitacion-satelital
 
-Pipeline en R para descargar, procesar y extraer datos de lluvia del Global Hydro-Estimator (GHE) de NOAA, y compararlos con registros de estaciones meteorológicas en tierra.
+Pipeline en R para descargar, procesar y comparar datos de precipitación satelital de NOAA con registros de estaciones meteorológicas en tierra.
 
-El GHE es un producto satelital que estima la precipitación a partir de imágenes infrarrojas, con una resolución espacial de ~5 km y una resolución temporal de 15 minutos. Este repositorio contiene el flujo completo para trabajar con esos datos: descarga, descompresión, selección del píxel correspondiente a una estación, y comparación con registros del IMN.
+El repositorio contiene dos flujos independientes:
 
-## ¿Por qué existe este repositorio?
+- **GHE** (Global Hydro-Estimator): producto histórico, descontinuado en 2025.
+- **ERR** (Enterprise Rain Rate): producto vigente, reemplazo del GHE.
 
-La comparación entre estimaciones satelitales y mediciones en tierra es una tarea común en hidrología y meteorología, pero requiere manejar formatos específicos (NetCDF), conversiones de zona horaria, y alineación temporal entre fuentes con distinta resolución.
-
-Este repositorio automatiza ese flujo y documenta un caso de estudio con la estación Upala del IMN.
-
-## Flujo de trabajo
-
-```
-1. descargador-hidroestimador.R     → descarga archivos .nc.gz desde AWS S3
-2. descomprimir-hidroestimador.R    → descomprime a .nc en subcarpeta nc/
-3. seleccionador-hidroestimador.R   → extrae el valor del pixel de la estacion
-                                       y lo guarda en CSV con hora local
-```
-
-Cada script se ejecuta por separado, en orden. El rango de fechas se define en el descargador.
-
-## Scripts
-
-### `descargador-hidroestimador.R`
-
-Descarga archivos del GHE desde el bucket público de NOAA en AWS S3.
-
-- **Entrada:** rango de fechas (inicio, fin)
-- **Salida:** archivos `.nc.gz` en la carpeta `descarga_Hidroestimador`
-
-**Nota:** el descargador original apuntaba al FTP de NOAA (`ftp://ftp.star.nesdis.noaa.gov/...`). Ese FTP fue retirado y los datos migraron temporalmente a un bucket de AWS S3 (`noaa-ghe-pds`). En 2025, el producto GHE fue descontinuado por completo y reemplazado por el Enterprise Rain Rate (ERR). El bucket de AWS que contiene los datos históricos del GHE cubre el período **2019–2025** y ya no recibe actualizaciones.
-
-### `descomprimir-hidroestimador.R`
-
-Descomprime los archivos `.nc.gz` y los guarda como `.nc` en la subcarpeta `nc/`.
-
-- **Entrada:** archivos `.nc.gz`
-- **Salida:** archivos `.nc` en `descarga_Hidroestimador/nc/`
-
-**Nota:** `gunzip` elimina el `.gz` original después de descomprimir. Cada `.nc` pesa ~180 MB.
-
-### `seleccionador-hidroestimador.R`
-
-Extrae el valor de lluvia del píxel más cercano a una estación meteorológica, desde los archivos NetCDF.
-
-- **Entrada:** carpeta `nc` con archivos `.nc`
-- **Salida:** CSV con fecha, hora, lat, lon y valor de lluvia
-
-**Nota:** el script está parametrizado con coordenadas de la estación Upala como ejemplo. Para usarlo con otra estación, solo hay que cambiar `lat_upala` y `lon_upala` por las coordenadas correspondientes. La fecha y hora se convierten de UTC a hora local de Costa Rica.
+Ambos estiman precipitación a partir de imágenes satelitales infrarrojas. El objetivo es automatizar la descarga, el procesamiento y la comparación con datos de estaciones del IMN.
 
 ## Estructura del repositorio
 
 ```
 .
 ├── README.md
-├── descargador-hidroestimador.R
-├── descomprimir-hidroestimador.R
-├── seleccionador-hidroestimador.R
-└── datos/
-    └── comparacion_imn_ghe.csv
+├── ghe/
+│   ├── descargador-hidroestimador.R
+│   ├── descomprimir-hidroestimador.R
+│   ├── seleccionador-hidroestimador.R
+│   └── datos/
+│       └── comparacion_imn_ghe.csv
+└── err/
+    ├── descargador-err.R
+    ├── seleccionador-err.R
+    └── datos/
+        └── comparacion_imn_err.csv
 ```
 
 ## Requisitos
@@ -77,14 +42,51 @@ Instalación:
 install.packages(c("aws.s3", "dplyr", "R.utils", "ncdf4"))
 ```
 
-## Uso
+---
 
-1. Ajustar la ruta en `setwd()` de cada script.
-2. Definir el rango de fechas en `descargador-hidroestimador.R`.
-3. Ejecutar los scripts en orden.
-4. Revisar el CSV resultante en la carpeta de trabajo.
+## GHE (Global Hydro-Estimator)
 
-## Caso de estudio
+Producto satelital de NOAA que estima precipitación a partir de imágenes infrarrojas, con resolución espacial de ~5 km y resolución temporal de 15 minutos. Fue descontinuado en 2025.
+
+### Flujo de trabajo
+
+```
+1. descargador-hidroestimador.R     → descarga archivos .nc.gz desde AWS S3
+2. descomprimir-hidroestimador.R    → descomprime a .nc en subcarpeta nc/
+3. seleccionador-hidroestimador.R   → extrae el valor del pixel de la estacion
+                                       y lo guarda en CSV con hora local
+```
+
+### Scripts
+
+**`descargador-hidroestimador.R`**
+
+Descarga archivos del GHE desde el bucket público de NOAA en AWS S3.
+
+- **Entrada:** rango de fechas (inicio, fin)
+- **Salida:** archivos `.nc.gz` en la carpeta `descarga_Hidroestimador`
+
+**Nota:** el descargador original apuntaba al FTP de NOAA. Ese FTP fue retirado y los datos migraron temporalmente a un bucket de AWS S3. En 2025, el producto fue descontinuado y reemplazado por el ERR. El bucket cubre el período 2019–2025 y ya no recibe actualizaciones.
+
+**`descomprimir-hidroestimador.R`**
+
+Descomprime los archivos `.nc.gz` y los guarda como `.nc` en la subcarpeta `nc/`.
+
+- **Entrada:** archivos `.nc.gz`
+- **Salida:** archivos `.nc` en `descarga_Hidroestimador/nc/`
+
+**Nota:** `gunzip` elimina el `.gz` original después de descomprimir. Cada `.nc` pesa ~180 MB.
+
+**`seleccionador-hidroestimador.R`**
+
+Extrae el valor de lluvia del píxel más cercano a una estación meteorológica.
+
+- **Entrada:** carpeta `nc` con archivos `.nc`
+- **Salida:** CSV con fecha, hora, lat, lon y valor de lluvia
+
+**Nota:** el script está parametrizado con coordenadas de la estación Upala como ejemplo. La fecha y hora se convierten de UTC a hora local de Costa Rica.
+
+### Caso de estudio GHE
 
 Se compararon datos del GHE con registros de la estación automática de Upala (IMN) para dos eventos:
 
@@ -97,16 +99,77 @@ Se compararon datos del GHE con registros de la estación automática de Upala (
 | 2021-08-21 | 16:00 | 41.6 | 0 |
 | 2021-08-21 | 17:00 | 0.6 | 0 |
 
-### Observaciones
+**Observaciones:**
 
 - El GHE no registró los eventos de lluvia puntual en la estación de Upala, aunque el IMN sí los registró.
-- Al analizar el raster completo del GHE para el evento del 2020-05-20, se encontró que el producto sí detectó lluvia ese día en Costa Rica, pero concentrada en el Pacífico Sur (máximo de 56.8 mm en 8.29°N, -84.86°O).
+- Al analizar el raster completo del GHE para el evento del 2020-05-20, se encontró que el producto sí detectó lluvia ese día en Costa Rica, pero concentrada en el Pacífico Sur.
 - Esto es consistente con limitaciones conocidas del algoritmo del GHE en eventos de convección poco profunda o de corta duración.
 
-### Conclusión preliminar
+---
 
-El Hidroestimador tiende a no registrar eventos de lluvia puntuales (una sola hora) en la estación de Upala, mientras que sí capta eventos de mayor duración o intensidad extendida. Se requieren más casos para confirmar el patrón.
+## ERR (Enterprise Rain Rate)
+
+Producto satelital de NOAA que reemplaza al GHE. Resolución espacial de ~2 km y resolución temporal de 10 minutos. Disponible desde 2025.
+
+### Flujo de trabajo
+
+```
+1. descargador-err.R     → descarga archivos .nc desde AWS S3
+2. seleccionador-err.R   → extrae el valor del pixel de la estacion
+                           y lo guarda en CSV con hora local
+```
+
+### Scripts
+
+**`descargador-err.R`**
+
+Descarga archivos del ERR desde el bucket público de NOAA en AWS S3. Para cada timestamp, usa el tile GLB de mayor número disponible (GLB-5 si está, si no GLB-4, etc.).
+
+- **Entrada:** rango de fechas (inicio, fin)
+- **Salida:** archivos `.nc` en la carpeta `descarga_ERR`
+
+**Nota:** el producto está dividido en 5 tiles (`GLB-1` a `GLB-5`). El tile de mayor número integra más satélites y tiene mayor cobertura válida. No todos los tiles están disponibles en todas las horas.
+
+**`seleccionador-err.R`**
+
+Extrae el valor de lluvia del píxel más cercano a una estación meteorológica.
+
+- **Entrada:** carpeta con archivos `.nc`
+- **Salida:** CSV con fecha, hora, lat, lon y valor de lluvia
+
+**Nota:** el script está parametrizado con coordenadas de la estación Upala como ejemplo. La fecha y hora se convierten de UTC a hora local de Costa Rica.
+
+### Caso de estudio ERR
+
+Se compararon datos del ERR con registros de la estación automática de Upala (IMN) para el evento del 5 de junio de 2026.
+
+| Fecha | Hora local | Lluvia IMN (mm) | Lluvia ERR (mm) |
+|-------|------------|------------------|------------------|
+| 2026-06-05 | 14:00 | 0 | 0 |
+| 2026-06-05 | 15:00 | 4.4 | 0 |
+| 2026-06-05 | 16:00 | 31.8 | 38.5 |
+| 2026-06-05 | 17:00 | 10 | 25.5 |
+| 2026-06-05 | 18:00 | 5 | 9.0 |
+| 2026-06-05 | 19:00 | 1.4 | 0 |
+| 2026-06-05 | 20:00 | 0.2 | 0 |
+| 2026-06-05 | 21:00 | 0 | 0 |
+
+**Observaciones:**
+
+- El ERR captó el evento principal de lluvia (16:00–18:00), con una sobreestimación moderada.
+- El ERR también detectó lloviznas leves que el IMN registró con valores bajos.
+- Los acumulados horarios del ERR son del mismo orden de magnitud que los del IMN.
+
+---
+
+## Conclusión
+
+Ambos productos satelitales captan eventos de lluvia y permiten observar tendencias generales cuando se comparan con estaciones en tierra. Sin embargo, sus estimaciones no son lo suficientemente precisas para aplicaciones cuantitativas como la alimentación de modelos hidrológicos (HEC-HMS) o hidráulicos.
+
+La experiencia con el GHE en años anteriores mostró el mismo patrón: los datos satelitales son útiles para identificar eventos y analizar tendencias, pero no reemplazan la medición en tierra para aplicaciones operativas.
 
 ## Contexto
 
 Este repositorio forma parte de un portafolio de proyectos desarrollados para demostrar el uso de R aplicado a problemas de ingeniería y análisis de información ambiental.
+
+
